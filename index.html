@@ -1,0 +1,52 @@
+<html>
+  <head>
+    <style>
+      #coleco {
+	  /* width: 100vw; */
+	  /* height: 100vh; */
+      }
+      body, html {
+	  margin: 0;
+      }
+
+      #blinkenlights span {
+        font-family: monospace;
+      }
+    </style>
+  </head>
+
+  <body>
+    <canvas id="coleco" height="208" width="272"></canvas>
+    <div id="speed"></div>
+    <button id="tick">Tick</button>
+    <button id="tickOnce">Tick 1</button>
+    <input type="checkbox" id="executing" checked="true">
+
+    <div id="blinkenlights">
+      <div><b>PC:</b> <span id="reg-pc"></span></div>
+      <div><b>A:</b> <span id="reg-a"></span></div>
+      <div><b>F:</b> <span id="reg-f"></span></div>
+      <div><b>BC:</b> <span id="reg-bc"></span></div>
+      <div><b>DE:</b> <span id="reg-de"></span></div>
+      <div><b>HL:</b> <span id="reg-hl"></span></div>
+      <div><b>IX:</b> <span id="reg-ix"></span></div>
+      <div><b>IY:</b> <span id="reg-iy"></span></div>
+      <div><b>I:</b> <span id="reg-i"></span></div>
+      <div><b>R:</b> <span id="reg-r"></span></div>
+      <div><b>SP:</b> <span id="reg-sp"></span></div>
+
+      <textarea id="memory"></textarea>
+    </div>
+
+    <div id="sn7">
+      <div><b>0:</b> V=<span id="sn7-0-v">0</span> FREQ=<span id="sn7-0-f">0</span></div>
+      <div><b>1:</b> V=<span id="sn7-1-v">0</span> FREQ=<span id="sn7-1-f">0</span></div>
+      <div><b>2:</b> V=<span id="sn7-2-v">0</span> FREQ=<span id="sn7-2-f">0</span></div>
+      <div><b>3:</b> V=<span id="sn7-3-v">0</span> FREQ=<span id="sn7-3-f">0</span></div>
+    </div>
+
+    <!-- <canvas id="preview" height=64 width=64></canvas> -->
+    
+    <script src="./emulate.js"></script>
+  </body>
+</html>

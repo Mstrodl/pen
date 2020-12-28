@@ -1,0 +1,10 @@
+node_modules
+cpm
+basic
+roms
+*~
+\#*\#
+z80-test
+.parcel-cache
+build/
+dist/
