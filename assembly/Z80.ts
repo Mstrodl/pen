@@ -3,6 +3,8 @@ import { VideoProcessor } from "./VideoProcessor";
 import { Joysticks } from "./Joysticks";
 import * as displayer from "./displayer";
 
+// If I had to do this all over, I would change Flags and RegisterSet
+// So I could inline them for performane
 export enum Flags {
   C = u8(1 << 0),
   CARRY = u8(1 << 0),

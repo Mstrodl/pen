@@ -175,49 +175,6 @@ ColecoAsync.then((ColecoInstance) => {
       }
     });
 
-    // const previewCtx = preview.getContext("2d");
-
-    // window.check = function () {
-    //   const ids = new Set();
-    //   for (let x = 0; x < 32; ++x) {
-    //     for (let y = 0; y < 24; ++y) {
-    //       const id = Coleco.getPatternAt(emulator, x, y);
-    //       ids.add(id);
-    //       console.log("ID", id, x, y);
-    //     }
-    //   }
-    //   console.log("ID:", ids);
-
-    //   const spriteTablePtr = Coleco.getSprites(emulator);
-    //   const spriteTable = Coleco.__getUint8Array(spriteTablePtr);
-    //   return spriteTable;
-    // };
-    // window.draw = function (x, y) {
-    //   const id = Coleco.getPatternAt(emulator, x, y);
-    //   console.log("Pattern is:", id);
-    //   const spriteTablePtr = Coleco.getSprites(emulator);
-    //   const spriteTable = Coleco.__getUint8Array(spriteTablePtr);
-
-    //   const data = new Uint8ClampedArray(8 * 8 * 4);
-
-    //   for (let y = 0; y < 8; ++y) {
-    //     let line = spriteTable[(id << 3) | y];
-    //     let x = 0;
-    //     for (let x = 0; x < 8; ++x) {
-    //       const isSet = (line >> x) & 1;
-    //       const value = isSet ? 255 : 0;
-    //       const base = x * 4 + y * 8 * 4;
-    //       data[base] = value;
-    //       data[base + 1] = value;
-    //       data[base + 2] = value;
-    //       data[base + 3] = 255;
-    //     }
-    //     console.log(line.toString(2).replace(/0/g, "."));
-    //   }
-    //   const imageData = new ImageData(data, 8, 8);
-    //   previewCtx.putImageData(imageData, 0, 0, 0, 0, 64, 64);
-    // };
-
     window.checkValues = function () {
       return Coleco.__getArray(Coleco.debugLog(emulator));
     };
