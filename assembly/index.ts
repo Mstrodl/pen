@@ -60,7 +60,7 @@ export function debugLog(emulator: Z80): Array<i32> {
   return emulator.debuggingItems.values();
 }
 
-// Test rig
+// Test rig stuff
 export function getRegister(emulator: Z80, register: string): u16 {
   if (register == "a") {
     return emulator.registers.A;

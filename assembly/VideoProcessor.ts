@@ -78,20 +78,11 @@ export class VideoProcessor {
   write(port: u8, value: u8): void {
     if (!(port & 0x1)) {
       // "Control"/VRAM direct
-      // console.importantLog("Control what");
-      // console.log(
-      //   "Writing V=0x" +
-      //   value.toString(16) +
-      //   " to 0x" +
-      //   this.pendingAddress.toString(16)
-      // );
       this.writeMemory(value);
     } else {
       // Registers / Address setup
-      // console.importantLog("Writing to registers");
       this.writeRegister(value);
     }
-    // console.importantLog("\n\n\nIO\n\n\n");
   }
 
   readRegister(): u8 {
@@ -171,25 +162,13 @@ export class VideoProcessor {
   setRegister(register: u8, value: u8): void {
     value &= this.REGISTER_MASKS[register];
     this.registers[register] = value;
-    // console.importantLog(
-    //   "Set R" + register.toString() + "=" + value.toString()
-    // );
   }
 
   writeRegister(value: u8): void {
     if (this.latch) {
-      const old = this.pendingAddress;
       this.pendingAddress =
         ((u16(value) << 8) | (this.pendingAddress & 0xff)) &
         (u16(this.memory.length) - 1);
-      // console.importantLog(
-      //   "Pending Address set to (latched) " +
-      //   this.pendingAddress.toString() +
-      //   " from " +
-      //   old.toString() +
-      //   " OutZ80 called with " +
-      //   value.toString()
-      // );
 
       // Register
       if (value & 0x80) {
@@ -199,39 +178,18 @@ export class VideoProcessor {
       }
       this.latch = false;
     } else {
-      const old = this.pendingAddress;
       this.pendingAddress =
         ((this.pendingAddress & 0xff00) | value) &
         (u16(this.memory.length) - 1);
-      // console.importantLog(
-      //   "Pending Address set to (no latch) " +
-      //   this.pendingAddress.toString() +
-      //   " from " +
-      //   old.toString() +
-      //   " OutZ80 called with " +
-      //   value.toString()
-      // );
       this.latch = true;
     }
   }
 
   writeMemory(value: u8): void {
+    // Write value to pending address
     this.memory[this.pendingAddress] = value;
-    // if (value != 0 && this.pendingAddress < 0x800) {
-    //   throw new Error(
-    //     "Writing value: " +
-    //     value.toString() +
-    //     " to " +
-    //     this.pendingAddress.toString()
-    //   );
-    // }
-    // console.log(
-    //   "Wrote 0x" +
-    //   value.toString(16) +
-    //   " to 0x" +
-    //   this.pendingAddress.toString(16)
-    // );
 
+    // Increment address
     this.pendingAddress =
       (this.pendingAddress + 1) & (u16(this.memory.length) - 1);
     this.readAhead = value;
@@ -259,12 +217,6 @@ export class VideoProcessor {
         if (handler != null) {
           handler.lineHandler(u8(this.line - VDP_START_LINE));
         } else {
-          console.importantLog(
-            "Drawing line at... Y=" +
-            (this.line - VDP_START_LINE).toString() +
-            " with " +
-            this.mode.toString()
-          );
           throw new Error("(Missing handler for " + this.mode.toString() + ")");
         }
       }
