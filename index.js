@@ -1,7 +1,7 @@
-import wasm from "url:./build/optimized.wasm";
-
+const wasm = require("url:./build/optimized.wasm");
 const fs = require("fs");
 const loader = require("@assemblyscript/loader");
+let screenPtr;
 const imports = {
   console: {
     consoleLog(strPtr) {
@@ -16,19 +16,18 @@ const imports = {
     },
   },
   displayer: {
-    refreshScreenJS(ptr) {
-      const data = Instance.exports.__getUint8ClampedArray(ptr);
-      Instance.exports.__release(ptr);
+    receiveScreen(ptr) {
+      screenPtr = ptr;
+    },
+    refreshScreenJS() {
+      const data = Instance.exports.__getUint8ClampedArray(screenPtr);
       Instance.refreshScreen(data);
     },
     writeSoundRegisterJS: require("./SoundDriver"),
   },
 };
 let Instance = null;
-module.exports = fetch(wasm)
-  .then((res) => res.arrayBuffer())
-  .then((buffer) => loader.instantiate(buffer, imports))
-  .then((instance) => {
-    Instance = instance;
-    return Instance;
-  });
+module.exports = loader.instantiate(fetch(wasm), imports).then((instance) => {
+  Instance = instance;
+  return Instance;
+});

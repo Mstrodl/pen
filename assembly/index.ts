@@ -56,7 +56,7 @@ export function controllerKeys(emulator: Z80, state: u16): void {
   emulator.registers.INT = true;
 }
 
-export function debugLog(emulator: Z80): Array<u16> {
+export function debugLog(emulator: Z80): Array<i32> {
   return emulator.debuggingItems.values();
 }
 

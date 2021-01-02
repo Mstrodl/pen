@@ -71,7 +71,7 @@ export class VideoProcessor {
       this.screen[i] = 0xff;
     }
 
-    displayer.refreshScreen(this.screen);
+    displayer.receiveScreen(this.screen);
   }
 
   // https://github.com/mamedev/mame/blob/f81fbdb8d4356b7a526a902726463e2f1af00615/src/devices/video/tms9928a.cpp#L147
@@ -271,7 +271,7 @@ export class VideoProcessor {
     }
     if (this.line == u16(VDP_END_LINE)) {
       if (this.updateCount >= 100) {
-        displayer.refreshScreen(this.screen);
+        displayer.refreshScreen();
         this.updateCount -= 100;
       }
       this.updateCount += 75;

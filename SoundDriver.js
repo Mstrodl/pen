@@ -92,7 +92,11 @@ class NoiseRegister {
   setVolume(value) {
     this.volume = value;
     const volume = VOLUME_TABLE[value] / 32767;
-    this.gain.gain.setValueAtTime(volume, this.ctx.currentTime);
+    console.log("Setting noise register volume", volume, value);
+    this.gain.gain.setValueAtTime(
+      isNaN(volume) ? 0 : volume,
+      this.ctx.currentTime
+    );
   }
 }
 
@@ -142,7 +146,7 @@ module.exports = function write(port, value) {
       const result = value & 0b1111;
       if (lastVolume) {
         // Volume = 4 bits anyways
-        channels[channel].setVolume(result);
+        channels[channel].setVolume(result & 0xf);
       } else {
         // Tone = 10 bits
         channels[channel].setFrequency(
@@ -154,7 +158,7 @@ module.exports = function write(port, value) {
       const result = value & 0b111111;
       // Data
       if (lastVolume) {
-        channels[lastChannel].setVolume(result);
+        channels[lastChannel].setVolume(result & 0xf);
       } else {
         channels[lastChannel].setFrequency(
           // Shift int back 4, 4+6=10
@@ -164,3 +168,5 @@ module.exports = function write(port, value) {
     }
   });
 };
+
+module.exports.resume = () => ctx.resume();

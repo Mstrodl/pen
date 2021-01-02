@@ -6,7 +6,7 @@
   "scripts": {
     "test": "node tests",
     "asbuild:untouched": "asc assembly/index.ts --target debug",
-    "asbuild:optimized": "asc assembly/index.ts --target release",
+    "asbuild:optimized": "asc assembly/index.ts --target release -O3 --runtime stub --noAssert",
     "asbuild": "npm run asbuild:untouched && npm run asbuild:optimized"
   },
   "author": "Mary Strodl",
@@ -21,5 +21,9 @@
     "@babel/plugin-transform-runtime": "^7.10.1",
     "@babel/runtime": "^7.10.1",
     "assemblyscript": "^0.17.7"
-  }
+  },
+  "browserslist": [
+    "last 1 chrome version",
+    "last 1 firefox version"
+  ]
 }
