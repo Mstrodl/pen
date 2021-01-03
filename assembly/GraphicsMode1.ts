@@ -1,5 +1,5 @@
 import { DisplayMode } from "./Display";
-import { VideoProcessor } from "./VideoProcessor";
+import { VideoProcessor, WIDTH } from "./VideoProcessor";
 import * as console from "./console";
 
 export class Graphics1 implements DisplayMode {
@@ -30,8 +30,8 @@ export class Graphics1 implements DisplayMode {
   }
 
   setColor(x: i32, y: i32, colorId: u8): void {
-    const color = this.colors[colorId];
-    const baseIndex = x * 4 + y * 272 * 4;
+    const color = this.colors[colorId & 0xf];
+    const baseIndex = x * 4 + y * WIDTH * 4;
     if (baseIndex + 3 >= this.video.screen.length) {
       console.log(
         "Putting: " +
@@ -42,8 +42,8 @@ export class Graphics1 implements DisplayMode {
         y.toString()
       );
     }
-    this.video.screen[baseIndex] = color >> 8;
-    this.video.screen[baseIndex + 1] = (color >> 4) & 0xff;
+    this.video.screen[baseIndex] = color >> 16;
+    this.video.screen[baseIndex + 1] = (color >> 8) & 0xff;
     this.video.screen[baseIndex + 2] = color & 0xff;
     // this.video.screen[baseIndex + 3] = 255;
   }

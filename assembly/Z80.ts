@@ -1075,7 +1075,13 @@ export class Z80 {
       case 0x69:
       case 0x79: {
         this.out(this.registers.C, this.getReg8(op >> 3));
-        return 11;
+        return 12;
+      }
+
+      // out c,0
+      case 0x71: {
+        this.out(this.registers.C, 0);
+        return 12;
       }
 
       // sbc hl,pair
@@ -1174,6 +1180,23 @@ export class Z80 {
         return 18;
       }
 
+      // rrd
+      case 0x67: {
+        const low = this.memory[this.registers.HL] & 0xf;
+        this.memory[this.registers.HL] =
+          ((this.memory[this.registers.HL] & 0xf0) >> 4) |
+          ((this.registers.A & 0xf) << 4);
+        this.registers.A = (this.registers.A & 0xf0) | low;
+
+        this.setFlag(u8(Flags.SIGN), (this.registers.A & 128) != 0);
+        this.setFlag(u8(Flags.ZERO), this.registers.A == 0);
+        this.setFlag(u8(Flags.HALF_CARRY), false);
+        this.parity8(this.registers.A);
+        this.setFlag(u8(Flags.N), false);
+        this.setUndocumentedFlags(this.registers.A);
+        return 18;
+      }
+
       // ld (**),pair
       case 0x43:
       case 0x53:
@@ -1200,9 +1223,8 @@ export class Z80 {
         this.out(this.registers.C, this.memory[this.registers.HL]);
         ++this.registers.HL;
         this.registers.F |= u8(Flags.N);
-        if (--this.registers.B == 0) {
-          this.registers.F |= u8(Flags.ZERO);
-        }
+        this.setFlag(u8(Flags.ZERO), --this.registers.B == 0);
+
         return 16;
       }
 
@@ -1294,7 +1316,7 @@ export class Z80 {
           throw new Error(
             "Not implemented extended OP: " +
             op.toString() +
-            " " +
+            " @ " +
             this.registers.PC.toString()
           );
         }
@@ -1369,6 +1391,14 @@ export class Z80 {
         }
         return 10;
       }
+      // add a,(index+n)
+      case 0x86: {
+        const value = this.memory[
+          this.displace(isY ? this.registers.IY : this.registers.IX, this.n())
+        ];
+        this.registers.A = this.add8(this.registers.A, value);
+        return 19;
+      }
       // ld index,(**)
       case 0x2a: {
         const value = this.ptr16(this.nn());
@@ -1408,6 +1438,27 @@ export class Z80 {
         return 19;
       }
 
+      // cp (index+n)
+      case 0xbe: {
+        const value = this.memory[
+          this.displace(isY ? this.registers.IY : this.registers.IX, this.n())
+        ];
+        this.sub8(this.registers.A, value);
+        // Unclear how this works...
+        this.setUndocumentedFlags(value);
+        return 19;
+      }
+
+      // xor (index+n)
+      case 0xae: {
+        const value = this.memory[
+          this.displace(isY ? this.registers.IY : this.registers.IX, this.n())
+        ];
+
+        this.registers.A = this.xor8(this.registers.A, value);
+        return 19;
+      }
+
       // dec (index+n)
       case 0x35: {
         const index = this.displace(
@@ -1416,6 +1467,15 @@ export class Z80 {
         );
         this.memory[index] = this.sub8(this.memory[index], 1, false);
         return 23;
+      }
+
+      // sub (index+n)
+      case 0x96: {
+        const value = this.memory[
+          this.displace(isY ? this.registers.IY : this.registers.IX, this.n())
+        ];
+        this.registers.A = this.sub8(this.registers.A, value);
+        return 19;
       }
 
       // inc (index+n)
@@ -1526,7 +1586,7 @@ export class Z80 {
 
       default: {
         if (this.testingEnvironment) {
-          console.log("Not fouNd: " + op.toString(16));
+          console.log("Not fouNd: index " + op.toString(16));
           return 0;
         } else {
           throw new Error("Unknown index op: " + op.toString());
@@ -2280,10 +2340,11 @@ export class Z80 {
       case 0xe0: {
         // this.sound.write(port, value);
         displayer.writeSoundRegister(port, value);
-        return;
+        break;
       }
       default: {
-        throw new Error("Unknown IO port " + port.toString());
+        console.log("Unknown IO port " + port.toString(16));
+        break;
       }
     }
   }

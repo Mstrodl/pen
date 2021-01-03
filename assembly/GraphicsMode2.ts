@@ -1,5 +1,5 @@
 import { DisplayMode } from "./Display";
-import { VideoProcessor } from "./VideoProcessor";
+import { VideoProcessor, WIDTH } from "./VideoProcessor";
 import * as console from "./console";
 
 export class Graphics2 implements DisplayMode {
@@ -34,7 +34,7 @@ export class Graphics2 implements DisplayMode {
     //   // throw new Error("Oh no! Trying to use color: " + colorId.toString());
     // }
     const color = i32(colorId) >= this.colors.length ? 0 : this.colors[colorId];
-    const baseIndex = x * 4 + y * 272 * 4;
+    const baseIndex = x * 4 + y * WIDTH * 4;
     this.video.screen[baseIndex] = color >> 8;
     this.video.screen[baseIndex + 1] = (color >> 4) & 0xff;
     this.video.screen[baseIndex + 2] = color & 0xff;

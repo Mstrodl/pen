@@ -122,7 +122,8 @@ const VOLUME_TABLE = [
 const channels = [];
 const ctx = new AudioContext();
 const gainNode = ctx.createGain();
-gainNode.gain.value = 0.1;
+const DEFAULT_VOLUME = 0.1;
+gainNode.gain.value = DEFAULT_VOLUME;
 for (let i = 0; i < 3; ++i) {
   channels.push(new ToneRegister(ctx, gainNode, i));
 }
@@ -170,3 +171,5 @@ module.exports = function write(port, value) {
 };
 
 module.exports.resume = () => ctx.resume();
+module.exports.setMuted = (muted) =>
+  gainNode.gain.setValueAtTime(muted ? 0 : DEFAULT_VOLUME, ctx.currentTime);

@@ -1,4 +1,4 @@
-const wasm = require("url:./build/optimized.wasm");
+const wasm = require("url:./build/untouched.wasm");
 const fs = require("fs");
 const loader = require("@assemblyscript/loader");
 let screenPtr;

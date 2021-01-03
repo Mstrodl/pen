@@ -10,8 +10,8 @@ import { Graphics2 } from "./GraphicsMode2";
 export const VDP_START_LINE = 3 + 13 + 27;
 export const VDP_END_LINE = VDP_START_LINE + 192;
 
-export const WIDTH = 272;
-export const HEIGHT = 208;
+export const WIDTH = 256;
+export const HEIGHT = 192;
 
 export class VideoProcessor {
   memory: Uint8Array;
@@ -40,7 +40,7 @@ export class VideoProcessor {
 
     // VRAM
     this.memory = new Uint8Array(0x4000);
-    this.registers = new Uint8Array(8);
+    this.registers = new Uint8Array(8).fill(0);
 
     this.pendingAddress = 0;
     this.readAhead = 0;
@@ -62,7 +62,7 @@ export class VideoProcessor {
 
     this.modes = new StaticArray<DisplayMode | null>(4);
     this.modes[1] = new Graphics1(this);
-    this.modes[2] = new Graphics2(this);
+    // this.modes[2] = new Graphics2(this);
     // this.modes[1] = new Graphics2(this);
     // this.modes[2] = new Multicolor(this);
     // this.modes[4] = new Text(this);
