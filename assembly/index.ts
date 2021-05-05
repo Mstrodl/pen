@@ -36,6 +36,7 @@ export function stepEmulatorVideo(emulator: Z80): Uint8ClampedArray {
 
 export function updateROM(emulator: Z80, rom: Uint8Array): void {
   emulator.memory.set(rom, 0x8000);
+  emulator.memory.fill(0, rom.length + 0x8000);
 }
 
 export function reset(emulator: Z80): void {
