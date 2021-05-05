@@ -11,6 +11,7 @@ const romPromise = fetch(romUrl, {cache: "force-cache"}).then((res) =>
 );
 ColecoAsync.then((ColecoInstance) => {
   const Coleco = ColecoInstance.exports;
+
   Promise.all([
     biosPromise.then((bios) =>
       Coleco.__pin(
@@ -97,7 +98,7 @@ ColecoAsync.then((ColecoInstance) => {
         }
         const amount = stepAmount * speed;
         const delay = amount - (performance.now() - now);
-        console.log("PC:", Coleco.pc(emulator).toString(16), delay);
+        // console.log("PC:", Coleco.pc(emulator).toString(16), delay);
         stepMany(delay);
       }, delay);
     }
@@ -231,5 +232,22 @@ ColecoAsync.then((ColecoInstance) => {
     window.checkValues = function () {
       return Coleco.__getArray(Coleco.debugLog(emulator));
     };
+
+    const romElement = document.getElementById("rom");
+    romElement.addEventListener("change", () => {
+      const file = romElement.files[0];
+      if (file) {
+        file.arrayBuffer().then((arrayBuffer) => {
+          cartridge = Coleco.__pin(
+            Coleco.__newArray(Coleco.UINT8ARRAY_ID, new Uint8Array(arrayBuffer))
+          );
+          Coleco.updateROM(emulator, cartridge);
+          Coleco.reset(emulator);
+
+          const oldCart = cartridge;
+          Coleco.__unpin(oldCart);
+        });
+      }
+    });
   });
 });

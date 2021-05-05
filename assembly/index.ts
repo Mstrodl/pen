@@ -3,6 +3,7 @@ import * as console from "./console";
 import { Z80 } from "./Z80";
 
 export function createEmulator(bios: Uint8Array, cart: Uint8Array): Z80 {
+  console.log("Cart: " + cart[0].toString());
   return new Z80(bios, cart);
 }
 
@@ -31,6 +32,81 @@ export function stepEmulatorVideo(emulator: Z80): Uint8ClampedArray {
     emulator.video.tick();
   }
   return emulator.video.screen;
+}
+
+export function updateROM(emulator: Z80, rom: Uint8Array): void {
+  emulator.memory.set(rom, 0x8000);
+}
+
+export function reset(emulator: Z80): void {
+  emulator.registers.PC = 0;
+  emulator.registers.SP = 0;
+
+  emulator.registers.IX = 0;
+  emulator.registers.IY = 0;
+
+  emulator.registers.I = 0;
+  emulator.registers.R = 0;
+
+  emulator.registers.A1 = 0;
+  emulator.registers.F1 = 0;
+
+  emulator.registers.B1 = 0;
+  emulator.registers.C1 = 0;
+
+  emulator.registers.D1 = 0;
+  emulator.registers.E1 = 0;
+
+  emulator.registers.H1 = 0;
+  emulator.registers.L1 = 0;
+
+  emulator.registers.A2 = 0;
+  emulator.registers.F2 = 0;
+
+  emulator.registers.B2 = 0;
+  emulator.registers.C2 = 0;
+
+  emulator.registers.D2 = 0;
+  emulator.registers.E2 = 0;
+
+  emulator.registers.H2 = 0;
+  emulator.registers.L2 = 0;
+
+  emulator.registers.registerSet = false;
+  emulator.registers.mathSet = false;
+
+  emulator.registers.instructionCount = 228;
+  emulator.registers.instructionPeriod = 228;
+
+  emulator.registers.NMI = false;
+  emulator.registers.IFF1 = false;
+  emulator.registers.IFF2 = false;
+  emulator.registers.INT = false;
+
+  emulator.registers.INTMODE = 0;
+
+  emulator.registers.halted = false;
+
+  emulator.registers.cycleOffset = 0;
+
+  emulator.trapping = false;
+  emulator.logging = false;
+  emulator.memory.fill(0, 0x5fff, 0x6000);
+
+  emulator.video.memory.fill(0);
+  emulator.video.registers.fill(0);
+  emulator.video.pendingAddress = 0;
+  emulator.video.status = 0;
+  emulator.video.status = 0;
+  emulator.video.fifthSprite = 0;
+  emulator.video.interrupt = false;
+  emulator.video.latch = false;
+  emulator.video.updateCount = 0;
+  emulator.video.line = 0;
+  emulator.video.screen.fill(0);
+  for (let i = 3; i < emulator.video.screen.length; i += 4) {
+    emulator.video.screen[i] = 0xff;
+  }
 }
 
 export function pc(emulator: Z80): u16 {

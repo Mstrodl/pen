@@ -12,6 +12,10 @@
       #blinkenlights span {
         font-family: monospace;
       }
+
+      #preview {
+        display: none;
+      }
     </style>
   </head>
 
@@ -34,8 +38,6 @@
       <div><b>I:</b> <span id="reg-i"></span></div>
       <div><b>R:</b> <span id="reg-r"></span></div>
       <div><b>SP:</b> <span id="reg-sp"></span></div>
-
-      <textarea id="memory"></textarea>
     </div>
 
     <div id="sn7">
@@ -46,6 +48,10 @@
     </div>
 
     <canvas id="preview" height=64 width=64></canvas>
+
+    <hr>
+    <label for="rom">Custom ROM:</label>
+    <input id="rom" type="file"></input>
     
     <script src="./emulate.js"></script>
   </body>
