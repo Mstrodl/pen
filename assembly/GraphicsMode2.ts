@@ -10,23 +10,22 @@ export class Graphics2 implements DisplayMode {
     this.video = video;
     this.colors = new Uint32Array(32);
 
-    let i = 0;
-    this.colors[i++] = 0x000000;
-    this.colors[i++] = 0x000000;
-    this.colors[i++] = 0x24da24;
-    this.colors[i++] = 0x6dff6d;
-    this.colors[i++] = 0x2424ff;
-    this.colors[i++] = 0x486dff;
-    this.colors[i++] = 0xb62424;
-    this.colors[i++] = 0x48daff;
-    this.colors[i++] = 0xff2424;
-    this.colors[i++] = 0xff6d6d;
-    this.colors[i++] = 0xdada24;
-    this.colors[i++] = 0xdada91;
-    this.colors[i++] = 0x249124;
-    this.colors[i++] = 0xda48b6;
-    this.colors[i++] = 0xb6b6b6;
-    this.colors[i++] = 0xffffff;
+    this.colors[0] = 0x000000;
+    this.colors[1] = 0x000000;
+    this.colors[2] = 0x24da24;
+    this.colors[3] = 0x6dff6d;
+    this.colors[4] = 0x2424ff;
+    this.colors[5] = 0x486dff;
+    this.colors[6] = 0xb62424;
+    this.colors[7] = 0x48daff;
+    this.colors[8] = 0xff2424;
+    this.colors[9] = 0xff6d6d;
+    this.colors[0xa] = 0xdada24;
+    this.colors[0xb] = 0xdada91;
+    this.colors[0xc] = 0x249124;
+    this.colors[0xd] = 0xda48b6;
+    this.colors[0xe] = 0xb6b6b6;
+    this.colors[0xf] = 0xffffff;
   }
 
   setColor(x: i32, y: i32, colorId: u8): void {
@@ -35,34 +34,27 @@ export class Graphics2 implements DisplayMode {
     // }
     const color = i32(colorId) >= this.colors.length ? 0 : this.colors[colorId];
     const baseIndex = x * 4 + y * WIDTH * 4;
-    this.video.screen[baseIndex] = color >> 8;
-    this.video.screen[baseIndex + 1] = (color >> 4) & 0xff;
+    this.video.screen[baseIndex] = color >> 16;
+    this.video.screen[baseIndex + 1] = (color >> 8) & 0xff;
     this.video.screen[baseIndex + 2] = color & 0xff;
-    // this.video.screen[baseIndex + 3] = 255;
+    this.video.screen[baseIndex + 3] = 255;
   }
 
   lineHandler(y: u8): void {
-    const spriteLineIndex = u16(y & 7) + u16((y & 0x60) << 5);
-    // console.log(
-    //   "Sprite Line Index: " + y.toString() + " " + spriteLineIndex.toString()
-    // );
+    const spriteLineIndex = i32(y & 7) + (i32(y & 0xc0) << 5);
+
     const patternTable = this.video.patternTable;
     const colorTable = this.video.colorTable;
 
-    const nameStarts = this.video.nameTable + (u16(y & 0xf8) << 2);
+    const nameStarts = this.video.nameTable + (i32(y & 0xf8) << 2);
 
-    const CLTMask = 0xffffff;
-    const PGTMask = 0xffffff;
     for (let x: u16 = 0; x < 32; ++x) {
-      const I = this.video.memory[nameStarts] << 3;
-      const color = this.video.memory[
-        colorTable + ((I + spriteLineIndex) | 0) // & CLTMask
-      ];
-      const fg = this.video.memory[colorTable + (color >> 4)];
-      const bg = this.video.memory[colorTable + (color & 0xf)];
-      const line = this.video.memory[
-        patternTable + ((spriteLineIndex + I) | 0) // & PGTMask)
-      ];
+      const I = i32(this.video.memory[nameStarts + x]) << 3;
+      const color = this.video.memory[colorTable + I + spriteLineIndex];
+      const fg: u8 = color >> 4;
+      const bg: u8 = color & 0xf;
+
+      const line = this.video.memory[patternTable + spriteLineIndex + I];
 
       // Each char is 8x8
       const screenX = i32(x) * 8;
@@ -76,6 +68,5 @@ export class Graphics2 implements DisplayMode {
       this.setColor(screenX + 6, y, line & 0x02 ? fg : bg);
       this.setColor(screenX + 7, y, line & 0x01 ? fg : bg);
     }
-    // console.importantLog(patterns);
   }
 }

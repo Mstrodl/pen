@@ -10,7 +10,6 @@ export class Graphics1 implements DisplayMode {
     this.video = video;
     this.colors = new Uint32Array(16);
 
-    let i = 0;
     this.colors[0] = 0x000000;
     this.colors[1] = 0x000000;
     this.colors[2] = 0x24da24;
@@ -45,7 +44,7 @@ export class Graphics1 implements DisplayMode {
     this.video.screen[baseIndex] = color >> 16;
     this.video.screen[baseIndex + 1] = (color >> 8) & 0xff;
     this.video.screen[baseIndex + 2] = color & 0xff;
-    // this.video.screen[baseIndex + 3] = 255;
+    // this.video.screen[baseIndex + 3] = colorId == 0 ? 255 : 0;
   }
 
   lineHandler(y: u8): void {

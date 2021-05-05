@@ -6,7 +6,7 @@ const imports = {
   console: {
     consoleLog(strPtr) {
       console.log("[AS]", Instance.exports.__getString(strPtr));
-      Instance.exports.__release(strPtr);
+      // Instance.exports.__unpin(strPtr);
     },
     consoleLogOP(op, pc) {
       console.log("[AS]", "OP", op.toString(16), "PC", pc.toString(16));

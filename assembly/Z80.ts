@@ -221,7 +221,7 @@ export class Z80 {
   memory: Uint8Array;
   video!: VideoProcessor;
   joysticks: Joysticks;
-  trap: i32 = -1;
+  trap: i32 = -1; // 0x1caa;
   trapping: boolean = false;
   logging: boolean = false;
   testingEnvironment: boolean = false;
@@ -277,9 +277,15 @@ export class Z80 {
 
       this.stackPush(this.registers.PC);
       this.registers.PC = 0x66;
+      // console.log("Doing 0x66 jump NMI!");
+      if (this.logging) {
+        this.updateRegisters();
+      }
       return 11;
     } else if (this.registers.INT && this.registers.IFF1) {
       this.registers.halted = false;
+      this.registers.IFF1 = false;
+      this.registers.IFF2 = false;
       switch (this.registers.INTMODE) {
         case 0: {
           throw new Error("I dunno how to handle an INT");
@@ -287,6 +293,9 @@ export class Z80 {
         case 1: {
           this.stackPush(this.registers.PC);
           this.registers.PC = 0x38;
+          if (this.logging) {
+            this.updateRegisters();
+          }
           return 11;
         }
         case 2: {
@@ -305,7 +314,12 @@ export class Z80 {
       this.trap = -1;
       this.logging = true;
       this.updateRegisters();
-      throw new Error("Hit breakpoint! @ " + this.registers.PC.toString());
+      throw new Error(
+        "Hit breakpoint! @ " +
+        this.registers.PC.toString() +
+        " mem add = " +
+        this.memory[this.registers.HL].toString(16)
+      );
     }
     const PC = this.registers.PC++;
     const op: u8 = this.memory[PC];
@@ -1218,13 +1232,34 @@ export class Z80 {
         return 9;
       }
 
-      // outi
-      case 0xa3: {
-        this.out(this.registers.C, this.memory[this.registers.HL]);
-        ++this.registers.HL;
-        this.registers.F |= u8(Flags.N);
-        this.setFlag(u8(Flags.ZERO), --this.registers.B == 0);
+      // ld a,i
+      case 0x57: {
+        this.registers.A = this.registers.I;
+        return 9;
+      }
 
+      // ld i,a
+      case 0x47: {
+        this.registers.I = this.registers.A;
+        return 9;
+      }
+
+      // outi
+      case 0xa3:
+      // outd
+      case 0xab: {
+        const value = this.memory[this.registers.HL];
+        this.out(this.registers.C, value);
+        this.registers.B = this.sub8(this.registers.B, 1, false);
+        this.setFlag(u8(Flags.N), (value & (1 << 7)) != 0);
+        if (op == 0xab) {
+          --this.registers.HL;
+        } else {
+          ++this.registers.HL;
+        }
+        const k = value + u16(this.registers.L);
+        this.setFlag(u8(Flags.C | Flags.H), k > 255);
+        this.parity8((u8(k) & 7) ^ this.registers.B);
         return 16;
       }
 
@@ -1232,7 +1267,8 @@ export class Z80 {
       case 0xb3:
       // otdr
       case 0xbb: {
-        this.out(this.registers.C, this.memory[this.registers.HL]);
+        const value = this.memory[this.registers.HL];
+        this.out(this.registers.C, value);
         if (op == 0xbb) {
           --this.registers.HL;
         } else {
@@ -1243,6 +1279,9 @@ export class Z80 {
           return 21;
         }
         this.registers.F = u8(Flags.Z) | u8(Flags.N);
+        const k = i32(value) + i32(this.registers.L);
+        this.setFlag(u8(Flags.H | Flags.C), k > 255);
+        this.parity8((u8(k) & 7) ^ this.registers.B);
         return 16;
       }
 
@@ -1273,6 +1312,45 @@ export class Z80 {
         }
         this.registers.PC -= 2;
         return 21;
+      }
+
+      // cpi
+      case 0xa1:
+      // cpir
+      case 0xb1:
+      // cpd
+      case 0xa9:
+      // cpdr
+      case 0xb9: {
+        const value = this.memory[this.registers.HL];
+        const result = this.sub8(this.registers.A, value, false);
+
+        const bitSource = result - (this.registers.F & u8(Flags.HALF_CARRY));
+
+        this.setFlag(u8(Flags.XF), (bitSource & (1 << 3)) != 0);
+        this.setFlag(u8(Flags.YF), (bitSource & (1 << 1)) != 0);
+
+        if ((op & 0x8) == 0) {
+          ++this.registers.HL;
+        } else {
+          --this.registers.HL;
+        }
+        --this.registers.BC;
+        this.setFlag(u8(Flags.PARITY), this.registers.BC != 0);
+        this.setFlag(u8(Flags.N), true);
+
+        if (op & 0x10) {
+          // Repeating!
+          if (
+            this.registers.BC != 0 &&
+            (this.registers.F & u8(Flags.ZERO)) == 0
+          ) {
+            this.registers.PC -= 2;
+            return 21;
+          }
+        }
+
+        return 16;
       }
 
       // ini
@@ -1307,6 +1385,11 @@ export class Z80 {
       case 0x79: {
         this.out(this.registers.C, this.getReg8(op));
         return 12;
+      }
+
+      // unknown
+      case 0x80: {
+        return 0;
       }
 
       default: {
@@ -1459,6 +1542,16 @@ export class Z80 {
         return 19;
       }
 
+      // and (index+n)
+      case 0xa6: {
+        const value = this.memory[
+          this.displace(isY ? this.registers.IY : this.registers.IX, this.n())
+        ];
+
+        this.registers.A = this.and8(this.registers.A, value);
+        return 19;
+      }
+
       // dec (index+n)
       case 0x35: {
         const index = this.displace(
@@ -1608,6 +1701,12 @@ export class Z80 {
         this.memory[ptr] = this.rlc8(this.memory[ptr]);
         return 23;
       }
+      // rrc (index+*)
+      case 0x0e: {
+        this.memory[ptr] = this.rrc8(this.memory[ptr]);
+        return 23;
+      }
+
       // rlc (index+*),reg
       case 0x00:
       case 0x01:
@@ -2746,8 +2845,6 @@ export class Z80 {
   setUndocumentedFlags(result: u8): void {
     this.setFlag(u8(Flags.XF), (result & 0b1000) != 0);
     this.setFlag(u8(Flags.YF), (result & 0b100000) != 0);
-    // this.setFlag(u8(Flags.XF), (u8(result) & u8(Flags.XF)) != 0);
-    // this.setFlag(u8(Flags.YF), (u8(result) & u8(Flags.YF)) != 0);
   }
 
   @inline

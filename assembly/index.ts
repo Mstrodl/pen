@@ -9,7 +9,7 @@ export function createEmulator(bios: Uint8Array, cart: Uint8Array): Z80 {
 export function step(emulator: Z80, many: boolean): u32 {
   if (many) {
     let collector = 0;
-    for (let i = 0; i < 1024 * 8; ++i) {
+    for (let i = 0; i < 1024 * 4; ++i) {
       const amount = emulator.stepCpu();
       collector += amount;
     }

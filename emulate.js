@@ -1,7 +1,7 @@
 const ColecoAsync = require("./index");
 const SoundDriver = require("./SoundDriver");
 const biosUrl = require("url:./roms/bios.col");
-const romUrl = require("url:./roms/kevtris.col");
+const romUrl = require("url:./roms/dk.col");
 
 const biosPromise = fetch(biosUrl, {cache: "force-cache"}).then((res) =>
   res.arrayBuffer()
@@ -13,14 +13,12 @@ ColecoAsync.then((ColecoInstance) => {
   const Coleco = ColecoInstance.exports;
   Promise.all([
     biosPromise.then((bios) =>
-      Coleco.__retain(
+      Coleco.__pin(
         Coleco.__newArray(Coleco.UINT8ARRAY_ID, new Uint8Array(bios))
       )
     ),
     romPromise.then((rom) =>
-      Coleco.__retain(
-        Coleco.__newArray(Coleco.UINT8ARRAY_ID, new Uint8Array(rom))
-      )
+      Coleco.__pin(Coleco.__newArray(Coleco.UINT8ARRAY_ID, new Uint8Array(rom)))
     ),
   ]).then(([bios, cartridge]) => {
     console.log("Setup!");
@@ -42,8 +40,8 @@ ColecoAsync.then((ColecoInstance) => {
     const regSP = document.getElementById("reg-sp");
 
     const emulator = Coleco.createEmulator(bios, cartridge);
-    Coleco.__release(bios);
-    Coleco.__release(cartridge);
+    Coleco.__unpin(bios);
+    Coleco.__unpin(cartridge);
     const memoryPtr = Coleco.getMemory(emulator);
     ColecoInstance.updateRegisters = (
       pc,
@@ -112,6 +110,7 @@ ColecoAsync.then((ColecoInstance) => {
       stepMany();
     });
 
+    let updateTimeout = null;
     function updateKeys() {
       let arrowKeys = 0;
       if (joyKeySet.has("ArrowLeft")) {
@@ -127,7 +126,13 @@ ColecoAsync.then((ColecoInstance) => {
       }
 
       console.log("Pushing keys!", state | arrowKeys, arrowKeys);
-      Coleco.controllerKeys(emulator, state | arrowKeys);
+      if (updateTimeout) {
+        clearTimeout(updateTimeout);
+      }
+      updateTimeout = setTimeout(
+        () => Coleco.controllerKeys(emulator, state | arrowKeys),
+        1000 / 120
+      );
     }
     let state = 0;
     const keys = {
