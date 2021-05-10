@@ -1,26 +1,57 @@
 <html>
   <head>
     <style>
-      #coleco {
-	  /* width: 100vw; */
-	  /* height: 100vh; */
-      }
       body, html {
-	  margin: 0;
+        margin: 0;
       }
 
       #blinkenlights span {
         font-family: monospace;
       }
 
-      #preview {
+      #preview, #sn7 {
         display: none;
+      }
+
+      .colecoWrap {
+        position: relative;
+        width: 100%;
+        height: 0;
+        padding-bottom: 75%; /* height / width * 100% */
+      }
+
+      .colecoSizing {
+        text-align: center;
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        max-height: 100vh;
+        height: 100%;
+      }
+
+      #coleco {
+        height: 100%;
+        image-rendering: pixelated;
+        image-rendering: -moz-crisp-edges;
+        image-rendering: crisp-edges;
+      }
+
+      .colecoMax {
+        overflow: hidden;
+        max-height: 100vh;
       }
     </style>
   </head>
 
   <body>
-    <canvas id="coleco" height="192" width="256"></canvas>
+    <div class="colecoMax">
+      <div class="colecoWrap">
+        <div class="colecoSizing">
+          <canvas id="coleco" height="192" width="256"></canvas>
+        </div>
+      </div>
+    </div>
     <div id="speed"></div>
     <button id="tick">Tick</button>
     <button id="tickOnce">Tick 1</button>

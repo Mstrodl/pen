@@ -76,9 +76,11 @@ ColecoAsync.then((ColecoInstance) => {
     };
 
     const executing = document.getElementById("executing");
-    executing.addEventListener("change", () =>
-      SoundDriver.setMuted(!executing.checked)
-    );
+    executing.addEventListener("change", () => {
+      SoundDriver.setMuted(!executing.checked);
+      blinkenlights.style.display = executing.checked ? "none" : "";
+    });
+    blinkenlights.style.display = executing.checked ? "none" : "";
 
     function step(many) {
       if (executing.checked) {

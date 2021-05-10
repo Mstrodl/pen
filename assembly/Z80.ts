@@ -2404,7 +2404,7 @@ export class Z80 {
         }
       }
       default: {
-        throw new Error("Read IO");
+        throw new Error("Read IO port: " + port.toString(16));
         return 0;
       }
     }
