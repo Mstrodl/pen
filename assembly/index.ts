@@ -3,7 +3,6 @@ import * as console from "./console";
 import { Z80 } from "./Z80";
 
 export function createEmulator(bios: Uint8Array, cart: Uint8Array): Z80 {
-  console.log("Cart: " + cart[0].toString());
   return new Z80(bios, cart);
 }
 

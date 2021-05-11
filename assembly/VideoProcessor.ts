@@ -134,25 +134,32 @@ export class VideoProcessor {
     }
   }
   get externalVideo(): boolean {
-    return (this.registers[0] & 1) == 1;
+    // Doc endians
+    return (this.registers[0] & 0b1) == 0b1;
   }
   get blank(): boolean {
-    return (this.registers[1] & 2) == 0;
+    // Doc endians
+    return (this.registers[1] & 0b1000000) == 0b1000000;
   }
   get interruptEnable(): boolean {
-    return (this.registers[1] & 0x20) == 0x20;
+    // Doc endians
+    return (this.registers[1] & 0b100000) == 0b100000;
   }
   get spriteSize(): boolean {
-    return (this.registers[1] & 64) == 64;
+    // Doc endians
+    return (this.registers[1] & 0b10) == 0b10;
   }
   get spriteMagnify(): boolean {
+    // Doc endians
     // Might be wrong...
-    return (this.registers[1] & 128) != 128;
+    return (this.registers[1] & 0b1) == 0b1;
   }
   get nameTable(): u16 {
+    // Seems OK with docs
     return u16(this.registers[2] & 0x7f) << 10;
   }
   get colorTable(): u16 {
+    // Seems OK with docs
     if (this.registers[0] & 2) {
       if (this.registers[3] == 0x7f) return 0x0000;
       if (this.registers[3] == 0xff) return 0x2000;
@@ -160,6 +167,7 @@ export class VideoProcessor {
     return u16(this.registers[3]) << 6;
   }
   get patternTable(): u16 {
+    // Seems OK with docs
     if (this.registers[0] & 2) {
       if (this.registers[4] == 0x7f) return 0x0000;
       if (this.registers[4] == 0xff) return 0x2000;
@@ -170,25 +178,30 @@ export class VideoProcessor {
   }
 
   get spriteAttributeTable(): u16 {
+    // Seems OK with docs, "Sprite attribute table start address"
     return u16(this.registers[5] & 127) << 7;
   }
   get spritePatternTable(): u16 {
+    // Seems OK with docs, "Sprite Generator Table start address"
     return u16(this.registers[6] & 7) << 11;
   }
   get textColor(): u8 {
+    // Consistent
     return this.registers[7] >> 4;
   }
   get backdropColor(): u8 {
+    // Consistent
     return this.registers[7] & 0xf;
   }
 
   setRegister(register: u8, value: u8): void {
+    // Seems consistent with docs
     value &= this.REGISTER_MASKS[register];
     if (
       register == 1 &&
       // 0x20 = IRQ enable
-      ((this.registers[register] ^ value) & value & 0x20) == 0x20 &&
-      // 0x80 = vblank
+      ((this.registers[1] ^ value) & value & 0x20) == 0x20 &&
+      // 0x80 = vblank; actually means interrupt is pending!!
       this.status & 0x80
     ) {
       this.cpu.doNMI();
@@ -250,6 +263,9 @@ export class VideoProcessor {
     let spriteCount = 0;
     let x2: i32;
 
+    // Remove 5th sprite flag & data
+    this.status &= ~(0x40 | 0x1f);
+
     if (i32(spriteTable) + 4 * 32 >= this.memory.length) {
       console.log(
         "Danger! Pattern table might go out of bounds! Table is " +
@@ -271,10 +287,9 @@ export class VideoProcessor {
 
       // We're drawing this sprite on this line!
       if (i32(line) > spriteY && i32(line) < spriteY + height) {
-        ++spriteCount;
-        if (spriteCount > 4) {
+        if (++spriteCount > 4) {
           // 5th sprite
-          this.status |= 0x40;
+          this.status |= 0x40 | u8(x2);
           break;
         }
         sprites |= 1 << x2;
@@ -480,12 +495,13 @@ export class VideoProcessor {
         this.updateCount -= 100;
       }
       this.updateCount += 75;
+      // Should we interrupt?? (because we're ABOUT to set the flag...)
       const irq = this.interruptEnable && (this.status & 0x80) == 0;
 
-      // Set vblank
+      // Set vblank (pending interrput, consistent)
       this.status |= 0x80;
 
-      // Collision flag
+      // Collision flag, consistent with docs
       if ((this.status & 32) == 0) {
         this.checkCollisions();
       }
@@ -498,6 +514,6 @@ export class VideoProcessor {
 
   checkCollisions(): void {
     // Check all sprites, if collision:
-    this.status |= 32;
+    // this.status |= 32;
   }
 }
